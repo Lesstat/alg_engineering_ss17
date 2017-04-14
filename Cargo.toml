@@ -1,0 +1,6 @@
+[package]
+name = "alg_engineering_ss17"
+version = "0.1.0"
+authors = ["Florian Barth <florianbarth@gmx.de>"]
+
+[dependencies]
