@@ -93,21 +93,20 @@ impl<E: Edge> Graph<E> {
         &self.edges[self.node_offsets[id].0..self.node_offsets[id + 1].0]
     }
 
-    fn calc_node_offsets(node_count: usize, edges: &Vec<E>) -> Vec<NodeOffset> {
+    fn calc_node_offsets(node_count: usize, edges: &[E]) -> Vec<NodeOffset> {
 
         let mut node_offsets = vec![NodeOffset(0); node_count +1];
         let mut last_source = 0;
         for (index, edge) in edges.iter().enumerate() {
             let cur_source = edge.get_source_id();
-            for id in last_source..cur_source {
-                node_offsets[id + 1].0 = index;
+            for node_offset in &mut node_offsets[last_source + 1..cur_source + 1] {
+                node_offset.0 = index;
             }
             last_source = cur_source;
         }
 
-
-        for id in (last_source + 1)..(node_count + 1) {
-            node_offsets[id].0 = edges.len();
+        for node_offset in &mut node_offsets[last_source + 1..node_count + 1] {
+            node_offset.0 = edges.len();
         }
         node_offsets
 
@@ -156,7 +155,7 @@ mod load {
             .expect("Could not read file");
         let mut line_iter = buffer
             .lines()
-            .skip_while(|l| l.starts_with("#") || l.is_empty());
+            .skip_while(|l| l.starts_with('#') || l.is_empty());
         let node_count: usize = line_iter
             .next()
             .map(str::parse)
@@ -231,7 +230,7 @@ mod load {
 
         }
 
-        assert!(None == line_iter.next(), "file still contains data");
+        assert_eq!(None, line_iter.next(), "file still contains data");
 
         (nodes, edges)
     }
@@ -241,6 +240,7 @@ mod load {
     }
 
     #[test]
+    #[ignore]
     fn load_test() {
         let (nodes, edges) = load_file("/home/flo/workspaces/rust/graphdata/saarland.graph");
         assert_eq!(nodes.len(), 595294);
