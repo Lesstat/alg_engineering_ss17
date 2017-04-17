@@ -5,3 +5,5 @@ authors = ["Florian Barth <florianbarth@gmx.de>"]
 
 [dependencies]
 rayon = "*"
+heapsize_derive = "*"
+heapsize = "*"

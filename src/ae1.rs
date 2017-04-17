@@ -8,6 +8,7 @@ pub type Length = usize;
 pub type Speed = usize;
 pub type Height = usize;
 
+#[derive(HeapSizeOf)]
 pub struct NodeInfo {
     osm_id: OsmNodeId,
     lat: Latitude,
@@ -32,7 +33,7 @@ pub trait Edge {
     fn get_travel_time(&self) -> f64;
 }
 
-#[derive(PartialEq,Debug)]
+#[derive(PartialEq,Debug,HeapSizeOf)]
 pub struct EdgeInfo {
     source: NodeId,
     dest: NodeId,
@@ -61,9 +62,10 @@ impl EdgeInfo {
         }
     }
 }
-#[derive(Clone,PartialEq,Debug)]
+#[derive(Clone,PartialEq,Debug,HeapSizeOf)]
 struct NodeOffset(usize);
 
+#[derive(HeapSizeOf)]
 pub struct Graph<E: Edge> {
     node_info: Vec<NodeInfo>,
     node_offsets: Vec<NodeOffset>,
