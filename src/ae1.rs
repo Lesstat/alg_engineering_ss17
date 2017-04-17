@@ -140,7 +140,7 @@ fn graph_creation() {
 }
 
 mod load {
-
+    use rayon::prelude::*;
     use ae1::*;
 
     use std::path::Path;
@@ -153,84 +153,74 @@ mod load {
         let mut file = File::open(file).expect("File could not be opened");
         file.read_to_string(&mut buffer)
             .expect("Could not read file");
-        let mut line_iter = buffer
+        let lines: Vec<&str> = buffer
             .lines()
-            .skip_while(|l| l.starts_with('#') || l.is_empty());
-        let node_count: usize = line_iter
-            .next()
-            .map(str::parse)
-            .expect("did not find node count")
-            .expect("Node Count could not be parsed");
-        let edge_count: usize = line_iter
-            .next()
-            .map(str::parse)
-            .expect("did not find edge count")
-            .expect("edge Count could not be parsed");
-
-
-        let mut nodes = Vec::with_capacity(node_count);
-        let mut edges = Vec::with_capacity(edge_count);
-        for node_id in 0..node_count {
-            let mut raw_node_data = line_iter
-                .next()
-                .map(|l| l.split(' '))
-                .expect(&format!("No more node data for {}", node_id));
-            raw_node_data.next(); // id is not necessary
-            let osm_id: OsmNodeId = raw_node_data
-                .next()
-                .map(str::parse)
-                .expect("No OSM ID Data")
-                .expect("OSM ID not parse-able");
-            let lat: Latitude = raw_node_data
-                .next()
-                .map(str::parse)
-                .expect("No Latitude Data")
-                .expect("Latitude not parse-able");
-            let long: Longitude = raw_node_data
-                .next()
-                .map(str::parse)
-                .expect("No Longitude Data")
-                .expect("Longitude not parse-able");
-            let height: Height = raw_node_data
-                .next()
-                .map(str::parse)
-                .expect("No Height Data")
-                .expect("Height not parse-able");
+            .skip_while(|l| l.starts_with('#') || l.is_empty())
+            .collect();
+        let node_count: usize = lines[0].parse().expect("Node Count could not be parsed");
+        //let edge_count: usize = lines[1].parse().expect("Edge Count could not be parsed");
+        let nodes = lines[2..node_count + 2]
+            .par_iter()
+            .map(|l| {
+                let mut raw_node_data = l.split(' ');
+                raw_node_data.next(); // id is not necessary
+                let osm_id: OsmNodeId = raw_node_data
+                    .next()
+                    .map(str::parse)
+                    .expect("No OSM ID Data")
+                    .expect("OSM ID not parse-able");
+                let lat: Latitude = raw_node_data
+                    .next()
+                    .map(str::parse)
+                    .expect("No Latitude Data")
+                    .expect("Latitude not parse-able");
+                let long: Longitude = raw_node_data
+                    .next()
+                    .map(str::parse)
+                    .expect("No Longitude Data")
+                    .expect("Longitude not parse-able");
+                let height: Height = raw_node_data
+                    .next()
+                    .map(str::parse)
+                    .expect("No Height Data")
+                    .expect("Height not parse-able");
+                NodeInfo::new(osm_id, lat, long, height)
+            })
+            .collect();
+        /*for node_id in 0..node_count {
             nodes.push(NodeInfo::new(osm_id, lat, long, height))
 
-        }
-        for edge_id in 0..edge_count {
-            let mut raw_node_data = line_iter
-                .next()
-                .map(|l| l.split(' '))
-                .expect(&format!("No more node data for {}", edge_id));
-            let source: NodeId = raw_node_data
-                .next()
-                .map(str::parse)
-                .expect("No source Id found")
-                .expect("Source id not parse-able");
-            let dest: NodeId = raw_node_data
-                .next()
-                .map(str::parse)
-                .expect("No destination Id found")
-                .expect("Destination id not parse-able");
-            let length: Length = raw_node_data
-                .next()
-                .map(str::parse)
-                .expect("No length found")
-                .expect("Length id not parse-able");
-            raw_node_data.next(); //ignore type
+        }*/
+        let edges = lines[node_count + 2..]
+            .par_iter()
+            .map(|l| {
+                let mut raw_node_data = l.split(' ');
 
-            let speed: Speed = raw_node_data
-                .next()
-                .map(str::parse)
-                .expect("No speed found")
-                .expect("Speed id not parse-able");
-            edges.push(EdgeInfo::new(source, dest, length, speed))
+                let source: NodeId = raw_node_data
+                    .next()
+                    .map(str::parse)
+                    .expect("No source Id found")
+                    .expect("Source id not parse-able");
+                let dest: NodeId = raw_node_data
+                    .next()
+                    .map(str::parse)
+                    .expect("No destination Id found")
+                    .expect("Destination id not parse-able");
+                let length: Length = raw_node_data
+                    .next()
+                    .map(str::parse)
+                    .expect("No length found")
+                    .expect("Length id not parse-able");
+                raw_node_data.next(); //ignore type
+                let speed: Speed = raw_node_data
+                    .next()
+                    .map(str::parse)
+                    .expect("No speed found")
+                    .expect("Speed id not parse-able");
+                EdgeInfo::new(source, dest, length, speed)
 
-        }
-
-        assert_eq!(None, line_iter.next(), "file still contains data");
+            })
+            .collect();
 
         (nodes, edges)
     }

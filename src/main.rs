@@ -1,3 +1,4 @@
+extern crate rayon;
 mod ae1;
 
 fn ae1_main() {
