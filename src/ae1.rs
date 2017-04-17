@@ -234,9 +234,20 @@ mod load {
 
         (nodes, edges)
     }
-    pub fn load_graph<P: AsRef<Path>>(file: &P) -> Graph<EdgeInfo> {
+    pub fn load_graph<P: AsRef<Path>>(file: P) -> Graph<EdgeInfo> {
+        use std::time::Instant;
+        let start = Instant::now();
         let (nodes, edges) = load_file(file);
-        Graph::new(nodes, edges)
+        let file_loaded = Instant::now();
+        let g = Graph::new(nodes, edges);
+        let graph_created = Instant::now();
+        println!("file loading time: {:?}", file_loaded.duration_since(start));
+        println!("graph creation time: {:?}",
+                 graph_created.duration_since(file_loaded));
+
+
+        g
+
     }
 
     #[test]

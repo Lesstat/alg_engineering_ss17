@@ -1,8 +1,9 @@
 mod ae1;
 
-fn main() {
-    let a: [i64; 4] = [2, 3, 4, 5];
-    let b = &a[1..1];
-    println!("{:?}", b.is_empty());
+fn ae1_main() {
+    ae1::load_graph("/home/flo/workspaces/rust/graphdata/bw.graph");
+}
 
+fn main() {
+    ae1_main();
 }
