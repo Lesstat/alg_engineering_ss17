@@ -32,17 +32,16 @@ impl<E: Edge> Graph<E> {
     }
 
     fn dfs(&self, start: NodeId, visited: &mut Vec<bool>) -> Component {
-        let mut result = BTreeSet::new();
+        let mut result = Component::new();
         let mut queue = VecDeque::<NodeId>::new();
         queue.push_front(start);
         while let Some(n) = queue.pop_front() {
+            result.insert(n);
             if !visited[n] {
                 visited[n] = true;
-                result.insert(n);
                 queue.extend(self.outgoing_edges_for(n)
                                  .iter()
-                                 .map(|e| e.get_dest_id())
-                                 .filter(|&n| !visited[n]));
+                                 .map(|e| e.get_dest_id()));
             }
         }
         result
@@ -55,7 +54,8 @@ fn count() {
     let g = Graph::new(vec![NodeInfo::new(1, 2.3, 3.4, 0),
                             NodeInfo::new(2, 2.3, 3.4, 0),
                             NodeInfo::new(3, 2.3, 3.4, 0),
-                            NodeInfo::new(4, 2.3, 3.4, 0)],
+                            NodeInfo::new(4, 2.3, 3.4, 0),
+                            NodeInfo::new(5, 2.3, 3.4, 0)],
                        vec![EdgeInfo::new(0, 1, 3, 3),
                             EdgeInfo::new(0, 2, 3, 3),
                             EdgeInfo::new(2, 3, 3, 3),
