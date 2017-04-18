@@ -85,7 +85,8 @@ pub fn load_graph<P: AsRef<Path>>(file: P) -> Graph<EdgeInfo> {
     let file_loaded = Instant::now();
     let g = Graph::new(nodes, edges);
     let graph_created = Instant::now();
-    println!("file loading time: {:?}", file_loaded.duration_since(start));
+    println!("file loading time:   {:?}",
+             file_loaded.duration_since(start));
     println!("graph creation time: {:?}",
              graph_created.duration_since(file_loaded));
     g

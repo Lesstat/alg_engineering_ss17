@@ -8,9 +8,11 @@ mod ae1;
 
 
 fn ae1_main() {
-    let graph = ae1::load_graph("/home/flo/workspaces/rust/graphdata/bw.graph");
+    let graph = ae1::load_graph("/home/flo/workspaces/rust/graphdata/saarland.graph");
     println!("Size of graph: {} MB",
              graph.heap_size_of_children() / 1048576);
+
+    println!("#Connected components: {}", graph.count_components());
 
 }
 
