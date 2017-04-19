@@ -2,6 +2,7 @@ use super::{Edge, Graph, NodeId, Length};
 
 use std::time::Instant;
 use std::cmp::Ordering;
+use std::usize;
 
 impl<E: Edge> Graph<E> {
     pub fn count_components(&self) -> usize {
@@ -32,39 +33,12 @@ impl<E: Edge> Graph<E> {
         }
     }
 
-    pub fn dijkstra(&self, source: NodeId, dest: NodeId) -> Option<Length> {
-        use std::usize;
-        use std::collections::BinaryHeap;
-
-        let mut dist = vec![usize::MAX; self.node_count()];
-        let mut heap = BinaryHeap::new();
-        heap.push(NodeCost {
-                      node: source,
-                      cost: 0,
-                  });
-
-        while let Some(NodeCost { node, cost }) = heap.pop() {
-
-            if node == dest {
-                return Some(cost);
-            }
-
-            if cost > dist[node] {
-                continue;
-            }
-            for edge in self.outgoing_edges_for(node) {
-                let next = NodeCost {
-                    node: edge.get_dest_id(),
-                    cost: cost + edge.get_distance(),
-                };
-                if next.cost < dist[next.node] {
-                    dist[next.node] = next.cost;
-                    heap.push(next);
-
-                }
-            }
+    pub fn dijkstra(&self) -> Dijkstra<E> {
+        Dijkstra {
+            dist: vec![usize::MAX; self.node_count()],
+            touched: Default::default(),
+            graph: &self,
         }
-        None
     }
 }
 
@@ -145,4 +119,49 @@ fn count() {
                             EdgeInfo::new(2, 3, 3, 3),
                             EdgeInfo::new(4, 0, 3, 3)]);
     assert_eq!(g.count_components(), 1)
+}
+
+struct Dijkstra<'a, E: Edge + 'a> {
+    dist: Vec<Length>,
+    touched: Vec<NodeId>,
+    graph: &'a Graph<E>,
+}
+
+impl<'a, E: Edge + 'a> Dijkstra<'a, E> {
+    pub fn distance(&mut self, source: NodeId, dest: NodeId) -> Option<Length> {
+        use std::collections::BinaryHeap;
+
+        for node in self.touched.drain(..) {
+            self.dist[node] = usize::MAX;
+        }
+        let mut heap = BinaryHeap::new();
+        heap.push(NodeCost {
+                      node: source,
+                      cost: 0,
+                  });
+
+        while let Some(NodeCost { node, cost }) = heap.pop() {
+
+            if node == dest {
+                return Some(cost);
+            }
+
+            if cost > self.dist[node] {
+                continue;
+            }
+            for edge in self.graph.outgoing_edges_for(node) {
+                let next = NodeCost {
+                    node: edge.get_dest_id(),
+                    cost: cost + edge.get_distance(),
+                };
+                if next.cost < self.dist[next.node] {
+                    self.dist[next.node] = next.cost;
+                    self.touched.push(next.node);
+                    heap.push(next);
+
+                }
+            }
+        }
+        None
+    }
 }

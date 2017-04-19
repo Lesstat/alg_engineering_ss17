@@ -14,7 +14,7 @@ mod ae1;
 use ae1::NodeId;
 
 fn ae1_main() {
-    let graph = ae1::load_graph("/home/flo/workspaces/rust/graphdata/bw.graph");
+    let graph = ae1::load_graph("/home/flo/workspaces/rust/graphdata/saarland.graph");
     println!("Size of graph: {} MB",
              graph.heap_size_of_children() / 1048576);
 
@@ -30,8 +30,9 @@ fn ae1_main() {
         destinations.push(dest % graph.node_count());
     }
     let start = Instant::now();
+    let mut dijkstra = graph.dijkstra();
     for try in 0..tries {
-        graph.dijkstra(sources[try], destinations[try]);
+        dijkstra.distance(sources[try], destinations[try]);
     }
     let end = Instant::now();
     println!("{} dijkstras took {:?}", tries, end.duration_since(start));
