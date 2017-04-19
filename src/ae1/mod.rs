@@ -30,10 +30,11 @@ impl NodeInfo {
     }
 }
 
-pub trait Edge {
+pub trait Edge: Sync {
     fn get_source_id(&self) -> NodeId;
     fn get_dest_id(&self) -> NodeId;
     fn get_travel_time(&self) -> f64;
+    fn get_distance(&self) -> Length;
 }
 
 #[derive(PartialEq,Debug,HeapSizeOf)]
@@ -53,6 +54,9 @@ impl Edge for EdgeInfo {
     }
     fn get_travel_time(&self) -> f64 {
         (self.length as f64) / (self.speed as f64)
+    }
+    fn get_distance(&self) -> Length {
+        self.length
     }
 }
 impl EdgeInfo {
@@ -116,6 +120,10 @@ impl<E: Edge> Graph<E> {
         }
         node_offsets
 
+    }
+
+    pub fn node_count(&self) -> usize {
+        self.node_offsets.len()
     }
 }
 

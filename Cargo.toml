@@ -7,3 +7,4 @@ authors = ["Florian Barth <florianbarth@gmx.de>"]
 rayon = "*"
 heapsize_derive = "*"
 heapsize = "*"
+rand = "*"

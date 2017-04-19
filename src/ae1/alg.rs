@@ -1,7 +1,7 @@
-use super::{Edge, Graph, NodeId};
+use super::{Edge, Graph, NodeId, Length};
 
-use std::collections::{BTreeSet, VecDeque};
 use std::time::Instant;
+use std::cmp::Ordering;
 
 impl<E: Edge> Graph<E> {
     pub fn count_components(&self) -> usize {
@@ -28,6 +28,47 @@ impl<E: Edge> Graph<E> {
                                  .iter()
                                  .map(|e| e.get_dest_id()));
             }
+
+        }
+    }
+
+    pub fn dijkstra(&self, source: NodeId, dest: NodeId) -> Option<Length> {
+        use std::usize;
+        use std::collections::BinaryHeap;
+
+        let mut dist = vec![usize::MAX; self.node_count()];
+        let mut heap = BinaryHeap::new();
+        heap.push(NodeCost {
+                      node: source,
+                      cost: 0,
+                  });
+
+        while let Some(NodeCost { node, cost }) = heap.pop() {
+
+            if node == dest {
+                return Some(cost);
+            }
+
+            if cost > dist[node] {
+                continue;
+            }
+            for edge in self.outgoing_edges_for(node) {
+                let next = NodeCost {
+                    node: edge.get_dest_id(),
+                    cost: cost + edge.get_distance(),
+                };
+                if next.cost < dist[next.node] {
+                    dist[next.node] = next.cost;
+                    heap.push(next);
+
+                }
+            }
+        }
+        None
+    }
+}
+
+
 #[derive(Debug)]
 struct UnionFind {
     parent: Vec<NodeId>,
@@ -70,6 +111,24 @@ impl UnionFind {
             }
         }
         result
+    }
+}
+
+#[derive(PartialEq, Eq, Debug )]
+struct NodeCost {
+    node: NodeId,
+    cost: usize,
+}
+
+impl Ord for NodeCost {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.cost.cmp(&self.cost)
+    }
+}
+
+impl PartialOrd for NodeCost {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
