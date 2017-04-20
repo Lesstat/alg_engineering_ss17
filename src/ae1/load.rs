@@ -78,7 +78,7 @@ fn load_file<P: AsRef<Path>>(file: P) -> (Vec<NodeInfo>, Vec<EdgeInfo>) {
 
     (nodes, edges)
 }
-pub fn load_graph<P: AsRef<Path>>(file: P) -> Graph<EdgeInfo> {
+pub fn load_graph<P: AsRef<Path>>(file: P) -> Graph {
     use std::time::Instant;
     let start = Instant::now();
     let (nodes, edges) = load_file(file);

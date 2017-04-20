@@ -1,10 +1,10 @@
-use super::{Edge, Graph, NodeId, Length};
+use super::{Graph, NodeId, Length};
 
 use std::time::Instant;
 use std::cmp::Ordering;
 use std::usize;
 
-impl<E: Edge> Graph<E> {
+impl Graph {
     pub fn count_components(&self) -> usize {
         let start = Instant::now();
         let mut union = UnionFind::new(self.node_info.len());
@@ -25,15 +25,13 @@ impl<E: Edge> Graph<E> {
         while let Some(n) = queue.pop() {
             if union.find(n) == n {
                 union.union(start, n);
-                queue.extend(self.outgoing_edges_for(n)
-                                 .iter()
-                                 .map(|e| e.get_dest_id()));
+                queue.extend(self.outgoing_edges_for(n).iter().map(|e| e.endpoint));
             }
 
         }
     }
 
-    pub fn dijkstra(&self) -> Dijkstra<E> {
+    pub fn dijkstra(&self) -> Dijkstra {
         Dijkstra {
             dist: vec![usize::MAX; self.node_count()],
             touched: Default::default(),
@@ -121,13 +119,13 @@ fn count() {
     assert_eq!(g.count_components(), 1)
 }
 
-struct Dijkstra<'a, E: Edge + 'a> {
+pub struct Dijkstra<'a> {
     dist: Vec<Length>,
     touched: Vec<NodeId>,
-    graph: &'a Graph<E>,
+    graph: &'a Graph,
 }
 
-impl<'a, E: Edge + 'a> Dijkstra<'a, E> {
+impl<'a> Dijkstra<'a> {
     pub fn distance(&mut self, source: NodeId, dest: NodeId) -> Option<Length> {
         use std::collections::BinaryHeap;
 
@@ -151,8 +149,8 @@ impl<'a, E: Edge + 'a> Dijkstra<'a, E> {
             }
             for edge in self.graph.outgoing_edges_for(node) {
                 let next = NodeCost {
-                    node: edge.get_dest_id(),
-                    cost: cost + edge.get_distance(),
+                    node: edge.endpoint,
+                    cost: cost + edge.weight,
                 };
                 if next.cost < self.dist[next.node] {
                     self.dist[next.node] = next.cost;

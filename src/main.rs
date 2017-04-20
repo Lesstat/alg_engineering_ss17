@@ -14,12 +14,12 @@ mod ae1;
 use ae1::NodeId;
 
 fn ae1_main() {
-    let graph = ae1::load_graph("/home/flo/workspaces/rust/graphdata/saarland.graph");
+    let graph = ae1::load_graph("/home/flo/workspaces/rust/graphdata/bw.graph");
     println!("Size of graph: {} MB",
              graph.heap_size_of_children() / 1048576);
 
     println!("#Connected components: {}", graph.count_components());
-    let tries = 1000;
+    let tries = 100;
     let mut sources = Vec::<NodeId>::with_capacity(tries);
     let mut destinations = Vec::<NodeId>::with_capacity(tries);
     let mut rng = rand::thread_rng();
