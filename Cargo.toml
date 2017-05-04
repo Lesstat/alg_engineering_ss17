@@ -8,3 +8,6 @@ rayon = "*"
 heapsize_derive = "*"
 heapsize = "*"
 rand = "*"
+
+[profile.release]
+debug = true
