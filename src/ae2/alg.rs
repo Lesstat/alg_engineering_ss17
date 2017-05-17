@@ -56,30 +56,6 @@ impl<'a> ChDijkstra<'a> {
         self.s_dist[s] = 0;
         self.s_touched.insert(s);
 
-        while let Some(NodeCost { node, cost }) = s_heap.pop() {
-
-            if cost > self.s_dist[node] {
-                continue;
-            }
-            for edge in self.graph.outgoing_edges_for(node) {
-                if self.graph.level[edge.endpoint] >= self.graph.level[node] {
-                    let next = NodeCost {
-                        node: edge.endpoint,
-                        cost: cost + edge.weight,
-                    };
-
-                    if next.cost < self.s_dist[next.node] {
-
-
-                        self.s_dist[next.node] = next.cost;
-                        self.s_touched.insert(next.node);
-                        s_heap.push(next);
-
-                    }
-                }
-            }
-        }
-
         for &node in &self.t_touched {
             self.t_dist[node] = usize::MAX;
         }
@@ -90,37 +66,88 @@ impl<'a> ChDijkstra<'a> {
         self.t_dist[t] = 0;
         self.t_touched.insert(t);
 
-        while let Some(NodeCost { node, cost }) = t_heap.pop() {
+        let mut min_candidate = usize::MAX;
+        let mut s_empty = false;
+        let mut t_empty = false;
+        let mut s_bigger = false;
+        let mut t_bigger = false;
 
-            if cost > self.t_dist[node] {
-                continue;
+        loop {
+            if s_empty && t_empty {
+                return usize::MAX;
             }
-            for edge in self.graph.ingoing_edges_for(node) {
-                if self.graph.level[edge.endpoint] >= self.graph.level[node] {
+            if s_bigger && t_bigger {
+                return min_candidate;
+            }
+            if let Some(NodeCost { node, cost }) = s_heap.pop() {
 
-                    let next = NodeCost {
-                        node: edge.endpoint,
-                        cost: cost + edge.weight,
-                    };
-                    if next.cost < self.t_dist[next.node] {
-                        self.t_dist[next.node] = next.cost;
-                        self.t_touched.insert(next.node);
-                        t_heap.push(next);
+                if cost > self.s_dist[node] {
+                    continue;
+                } else if cost > min_candidate {
+                    s_bigger = true;
+                }
+                if self.t_dist[node] != usize::MAX {
+                    let candidate = self.t_dist[node] + self.s_dist[node];
+                    if candidate < min_candidate {
+                        min_candidate = candidate;
                     }
                 }
+
+                for edge in self.graph.outgoing_edges_for(node) {
+                    if self.graph.level[edge.endpoint] >= self.graph.level[node] {
+                        let next = NodeCost {
+                            node: edge.endpoint,
+                            cost: cost + edge.weight,
+                        };
+
+                        if next.cost < self.s_dist[next.node] {
+
+
+                            self.s_dist[next.node] = next.cost;
+                            self.s_touched.insert(next.node);
+                            s_heap.push(next);
+
+                        }
+                    }
+                }
+            } else {
+                s_empty = true;
+            }
+
+
+            if let Some(NodeCost { node, cost }) = t_heap.pop() {
+
+                if cost > self.t_dist[node] {
+                    continue;
+                } else if cost > min_candidate {
+                    t_bigger = true;
+                }
+
+
+                if self.s_dist[node] != usize::MAX {
+                    let candidate = self.t_dist[node] + self.s_dist[node];
+                    if candidate < min_candidate {
+                        min_candidate = candidate;
+                    }
+                }
+                for edge in self.graph.ingoing_edges_for(node) {
+                    if self.graph.level[edge.endpoint] >= self.graph.level[node] {
+
+                        let next = NodeCost {
+                            node: edge.endpoint,
+                            cost: cost + edge.weight,
+                        };
+                        if next.cost < self.t_dist[next.node] {
+                            self.t_dist[next.node] = next.cost;
+                            self.t_touched.insert(next.node);
+                            t_heap.push(next);
+                        }
+                    }
+                }
+            } else {
+                t_empty = true
             }
         }
 
-        let mut min_length = usize::MAX;
-        for &node in self.s_touched.intersection(&self.t_touched) {
-            let candidate = self.s_dist[node] + self.t_dist[node];
-            if candidate < min_length {
-                min_length = candidate;
-            }
-
-
-
-        }
-        min_length
     }
 }
