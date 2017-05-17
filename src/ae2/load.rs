@@ -21,7 +21,11 @@ fn load_file<P: AsRef<Path>>(file: P) -> (Vec<ChNodeInfo>, Vec<ChEdgeInfo>) {
         .par_iter()
         .map(|l| {
             let mut raw_node_data = l.split(' ');
-            raw_node_data.next(); // id is not necessary
+            let id: NodeId = raw_node_data
+                .next()
+                .map(str::parse)
+                .expect("No Node ID Data")
+                .expect("Node ID not parse-able");
             let osm_id: OsmNodeId = raw_node_data
                 .next()
                 .map(str::parse)
@@ -47,7 +51,7 @@ fn load_file<P: AsRef<Path>>(file: P) -> (Vec<ChNodeInfo>, Vec<ChEdgeInfo>) {
                 .map(str::parse)
                 .expect("No Level Data")
                 .expect("Level not parse-able");
-            ChNodeInfo::new(osm_id, lat, long, height, level)
+            ChNodeInfo::new(id, osm_id, lat, long, height, level)
         })
         .collect();
 

@@ -15,6 +15,7 @@ pub type Level = usize;
 
 #[derive(HeapSizeOf)]
 pub struct ChNodeInfo {
+    id: NodeId,
     osm_id: OsmNodeId,
     lat: Latitude,
     long: Longitude,
@@ -23,18 +24,20 @@ pub struct ChNodeInfo {
 }
 
 impl ChNodeInfo {
-    fn new(osm_id: OsmNodeId,
+    fn new(id: NodeId,
+           osm_id: OsmNodeId,
            lat: Latitude,
            long: Longitude,
            height: Height,
            level: Level)
            -> ChNodeInfo {
         ChNodeInfo {
-            osm_id: osm_id,
-            lat: lat,
-            long: long,
-            height: height,
-            level: level,
+            id,
+            osm_id,
+            lat,
+            long,
+            height,
+            level,
         }
     }
 }
@@ -105,17 +108,10 @@ enum OffsetMode {
 }
 impl ChGraph {
     pub fn new(mut node_info: Vec<ChNodeInfo>, mut edges: Vec<ChEdgeInfo>) -> ChGraph {
-        use std::cmp::Ordering;
-        node_info.sort_by(|a, b| a.level.cmp(&b.level));
+        //node_info.sort_by(|a, b| a.level.cmp(&b.level));
+        //ChGraph::map_node_id_to_edges(&node_info, &mut edges);
         let level = node_info.iter().map(|n| n.level).collect();
 
-        edges.sort_by(|a, b| {
-                          let ord = a.source.cmp(&b.source);
-                          match ord {
-                              Ordering::Equal => a.dest.cmp(&b.dest),
-                              _ => ord,
-                          }
-                      });
 
         let node_count = node_info.len();
         let (node_offset, in_edges, out_edges) = ChGraph::calc_node_offsets(node_count, edges);
@@ -125,6 +121,19 @@ impl ChGraph {
             out_edges: out_edges,
             in_edges: in_edges,
             level: level,
+        }
+
+    }
+    fn map_node_id_to_edges(node_info: &Vec<ChNodeInfo>, edges: &mut Vec<ChEdgeInfo>) {
+        use std::collections::BTreeMap;
+
+        let mut mapping = BTreeMap::new();
+        for (i, n) in node_info.iter().enumerate() {
+            mapping.insert(n.id, i);
+        }
+        for e in edges.iter_mut() {
+            e.source = *mapping.get(&e.source).expect("id must be present");
+            e.dest = *mapping.get(&e.dest).expect("id must be present");
         }
 
     }

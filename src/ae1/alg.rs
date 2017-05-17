@@ -3,6 +3,7 @@ use super::{Graph, NodeId, Length};
 use std::time::Instant;
 use std::cmp::Ordering;
 use std::usize;
+use std::collections::VecDeque;
 
 impl Graph {
     pub fn count_components(&self) -> usize {
@@ -126,7 +127,7 @@ pub struct Dijkstra<'a> {
 }
 
 impl<'a> Dijkstra<'a> {
-    pub fn distance(&mut self, source: NodeId, dest: NodeId) -> Option<Length> {
+    pub fn distance(&mut self, source: NodeId, dest: NodeId) -> Option<(Length, VecDeque<NodeId>)> {
         use std::collections::BinaryHeap;
 
         for node in self.touched.drain(..) {
@@ -137,11 +138,20 @@ impl<'a> Dijkstra<'a> {
                       node: source,
                       cost: 0,
                   });
+        let mut prev: Vec<NodeId> = (0..self.graph.node_count()).collect();
+        self.dist[source] = 0;
+        self.touched.push(source);
 
         while let Some(NodeCost { node, cost }) = heap.pop() {
-
             if node == dest {
-                return Some(cost);
+                let mut path = VecDeque::new();
+                let mut cur = node;
+                while cur != source {
+                    path.push_front(cur);
+                    cur = prev[cur];
+                }
+                path.push_front(source);
+                return Some((cost, path));
             }
 
             if cost > self.dist[node] {
@@ -153,6 +163,7 @@ impl<'a> Dijkstra<'a> {
                     cost: cost + edge.weight,
                 };
                 if next.cost < self.dist[next.node] {
+                    prev[next.node] = node;
                     self.dist[next.node] = next.cost;
                     self.touched.push(next.node);
                     heap.push(next);

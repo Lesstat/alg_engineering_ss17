@@ -8,6 +8,7 @@ use rand::Rng;
 use heapsize::HeapSizeOf;
 
 use std::time::Instant;
+use std::collections::VecDeque;
 
 mod ae1;
 mod ae2;
@@ -49,7 +50,7 @@ fn ae2_main() {
     println!("Size of graph: {} MB",
              graph.heap_size_of_children() / 1048576);
 
-    let tries = 100;
+    let tries = 10000;
     let mut sources = Vec::<NodeId>::with_capacity(tries);
     let mut destinations = Vec::<NodeId>::with_capacity(tries);
     let mut rng = rand::thread_rng();
@@ -70,27 +71,7 @@ fn ae2_main() {
              end.duration_since(start).as_secs() as f64 / tries as f64);
 }
 
-fn ae1_from_to(s: ae1::NodeId, t: ae1::NodeId) -> ae1::Length {
-
-    use std::usize;
-
-    let graph = ae1::load_graph("/home/flo/workspaces/rust/graphdata/saarland.graph");
-    let mut dijk = graph.dijkstra();
-    dijk.distance(s, t).unwrap_or(usize::MAX)
-}
-
-fn ae2_from_to(s: ae2::NodeId, t: ae2::NodeId) -> ae2::Length {
-
-    let graph = ae2::load_graph("/home/flo/workspaces/rust/graphdata/saarland.ch");
-    let mut dijk = graph.dijkstra();
-    dijk.distance(s, t)
-}
 fn main() {
-    let d1 = 9173; //ae1_from_to(5, 500);
-    let d2 = ae2_from_to(5, 500);
 
-    println!("d1: {}, d2: {}", d1, d2);
-
-    assert_eq!(d1, d2)
-
+    ae2_main();
 }
