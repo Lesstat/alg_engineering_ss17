@@ -4,6 +4,8 @@ extern crate heapsize_derive;
 extern crate heapsize;
 extern crate rand;
 
+extern crate porter_stemmer;
+
 use rand::Rng;
 use heapsize::HeapSizeOf;
 
@@ -123,17 +125,8 @@ fn ae4_main() {
             .read_line(&mut buf)
             .expect("reading from stdin failed");
         println!("looking for key {}", buf);
+        ae4::query_index(&index, &movies, buf);
 
-        let set = index.get(buf.trim());
-        match set {
-            Some(set) => {
-                for &i in set {
-                    println!("{}", movies[i].title);
-                }
-            }
-            None => println!("Word not found"),
-
-        }
     }
 
 
