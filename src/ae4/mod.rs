@@ -19,14 +19,14 @@ pub struct Movie {
 impl FromStr for Movie {
     type Err = StrError;
     fn from_str(s: &str) -> Result<Movie, Self::Err> {
-        let mut split = s.split("\t");
+        let mut split = s.split('\t');
         let title = split.next().ok_or(StrError { msg: "No title found" })?;
         let desc_old = split
             .next()
             .ok_or(StrError { msg: "No description found" })?
             .to_lowercase();
         let mut desc = String::new();
-        for word in desc_old.split(" ") {
+        for word in desc_old.split(' ') {
             desc.push_str(stem(word).as_str());
             desc.push(' ');
         }
@@ -63,11 +63,11 @@ pub fn load_movies<P: AsRef<Path>>(file: P) -> Result<Vec<Movie>, StrError> {
     Ok(movies)
 }
 
-pub fn build_inverted_index(movies: &Vec<Movie>) -> InvertedIndex {
+pub fn build_inverted_index(movies: &[Movie]) -> InvertedIndex {
     let start = Instant::now();
     let mut index = HashMap::new();
     for (i, movie) in movies.iter().enumerate() {
-        for word in movie.desc.split(" ") {
+        for word in movie.desc.split(' ') {
             index.entry(word).or_insert_with(BTreeSet::new).insert(i);
         }
     }
@@ -79,11 +79,11 @@ pub fn build_inverted_index(movies: &Vec<Movie>) -> InvertedIndex {
     index
 }
 
-pub fn query_index(index: &InvertedIndex, movies: &Vec<Movie>, query: &String) -> Duration {
+pub fn query_index(index: &InvertedIndex, movies: &[Movie], query: &str) -> Duration {
     let start = Instant::now();
     let query = query.to_lowercase();
     let mut sets = Vec::new();
-    for word in query.trim().split(" ") {
+    for word in query.trim().split(' ') {
         let stemmed = stem(word);
         let set = match index.get(stemmed.as_str()) {
             Some(set) => set,
@@ -99,7 +99,7 @@ pub fn query_index(index: &InvertedIndex, movies: &Vec<Movie>, query: &String) -
     let mut result = sets[0].clone();
     if sets.len() > 1 {
         for set in &sets[1..] {
-            let new_res = result.intersection(set).map(|i| *i).collect();
+            let new_res = result.intersection(set).cloned().collect();
             result = new_res;
         }
     }
@@ -116,7 +116,7 @@ pub fn query_index(index: &InvertedIndex, movies: &Vec<Movie>, query: &String) -
 
 }
 
-pub fn naive_query(movies: &Vec<Movie>, query: &String) -> Duration {
+pub fn naive_query(movies: &[Movie], query: &str) -> Duration {
     let start = Instant::now();
     let mut result = BTreeSet::new();
     let mut query = stem(query.to_lowercase().trim());

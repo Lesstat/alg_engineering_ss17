@@ -11,7 +11,7 @@ impl ChGraph {
             t_dist: vec![usize::MAX; self.node_count()],
             s_touched: Default::default(),
             t_touched: Default::default(),
-            graph: &self,
+            graph: self,
         }
     }
 }

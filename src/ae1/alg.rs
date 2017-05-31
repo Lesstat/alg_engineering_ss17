@@ -36,7 +36,7 @@ impl Graph {
         Dijkstra {
             dist: vec![usize::MAX; self.node_count()],
             touched: Default::default(),
-            graph: &self,
+            graph: self,
         }
     }
 }

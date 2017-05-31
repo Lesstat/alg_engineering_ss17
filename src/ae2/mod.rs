@@ -136,19 +136,19 @@ impl ChGraph {
                          -> (Vec<NodeOffset>, Vec<HalfEdge>, Vec<HalfEdge>) {
         use std::cmp::Ordering;
 
-        fn calc_offset_inner(edges: &Vec<ChEdgeInfo>,
+        fn calc_offset_inner(edges: &[ChEdgeInfo],
                              node_offsets: &mut Vec<NodeOffset>,
-                             mode: OffsetMode) {
+                             mode: &OffsetMode) {
 
             let mut last_id = 0;
             for (index, edge) in edges.iter().enumerate() {
 
-                let cur_id = match mode {
+                let cur_id = match *mode {
                     OffsetMode::In => edge.dest,
                     OffsetMode::Out => edge.source,
                 };
                 for node_offset in &mut node_offsets[last_id + 1..cur_id + 1] {
-                    match mode {
+                    match *mode {
                         OffsetMode::In => {
                             node_offset.in_start = index;
                         }
@@ -162,7 +162,7 @@ impl ChGraph {
             }
 
             for node_offset in &mut node_offsets[last_id + 1..] {
-                match mode {
+                match *mode {
                     OffsetMode::In => {
                         node_offset.in_start = edges.len();
                     }
@@ -182,7 +182,7 @@ impl ChGraph {
                               _ => ord,
                           }
                       });
-        calc_offset_inner(&edges, &mut node_offsets, OffsetMode::In);
+        calc_offset_inner(&edges, &mut node_offsets, &OffsetMode::In);
         let in_edges = ChGraph::create_half_edges(&edges, OffsetMode::In);
 
 
@@ -193,12 +193,12 @@ impl ChGraph {
                               _ => ord,
                           }
                       });
-        calc_offset_inner(&edges, &mut node_offsets, OffsetMode::Out);
+        calc_offset_inner(&edges, &mut node_offsets, &OffsetMode::Out);
         let out_edges = ChGraph::create_half_edges(&edges, OffsetMode::Out);
 
         (node_offsets, in_edges, out_edges)
     }
-    fn create_half_edges(edges: &Vec<ChEdgeInfo>, mode: OffsetMode) -> Vec<HalfEdge> {
+    fn create_half_edges(edges: &[ChEdgeInfo], mode: OffsetMode) -> Vec<HalfEdge> {
         match mode {
 
             OffsetMode::In => {
