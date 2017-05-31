@@ -114,7 +114,14 @@ fn ae4_main() {
     let path = args.nth(1).expect("expect file argument");
     let movies = ae4::load_movies(path).expect("movies could not be loaded");
     let index = ae4::build_inverted_index(&movies);
+    let naive = match args.next() {
+        Some(_) => true,
+        None => false,
+    };
     println!("Inverted index is build");
+    if naive {
+        println!("naive search is active too");
+    }
     println!("Please enter Query");
     let stdin = stdin();
     let mut handle = stdin.lock();
@@ -125,7 +132,16 @@ fn ae4_main() {
             .read_line(&mut buf)
             .expect("reading from stdin failed");
         println!("looking for key {}", buf);
-        ae4::query_index(&index, &movies, buf);
+        let ind_dur = ae4::query_index(&index, &movies, &buf);
+
+        if naive {
+            let naiv_dur = ae4::naive_query(&movies, &buf);
+            println!("naive duration: {:?}", naiv_dur);
+
+        }
+
+        println!("query duration: {:?}", ind_dur);
+
 
     }
 

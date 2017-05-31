@@ -3,13 +3,14 @@ use std::path::Path;
 use std::convert::From;
 use std::collections::HashMap;
 use std::collections::BTreeSet;
-use std::time::Instant;
+use std::time::{Instant, Duration};
 
 use porter_stemmer::stem;
+use heapsize::HeapSizeOf;
 
 type InvertedIndex<'a> = HashMap<&'a str, BTreeSet<usize>>;
 
-#[derive(Debug,PartialEq,Eq)]
+#[derive(Debug,PartialEq,Eq, HeapSizeOf)]
 pub struct Movie {
     pub title: String,
     pub desc: String,
@@ -40,16 +41,25 @@ impl FromStr for Movie {
 pub fn load_movies<P: AsRef<Path>>(file: P) -> Result<Vec<Movie>, StrError> {
     use std::fs::File;
     use std::io::Read;
+
+    let start = Instant::now();
     let mut file = File::open(file)?;
     let mut buf = String::new();
     file.read_to_string(&mut buf)?;
 
-    let movies = buf.lines()
+    let movies: Vec<Movie> = buf.lines()
         .map(|line| {
                  let res = FromStr::from_str(line);
                  res.expect("Line is not valid")
              })
         .collect();
+    println!("loading file time: {:?}",
+             Instant::now().duration_since(start));
+    println!("Movies take {} MB",
+             movies.heap_size_of_children() / 1048576);
+
+
+
     Ok(movies)
 }
 
@@ -65,10 +75,11 @@ pub fn build_inverted_index(movies: &Vec<Movie>) -> InvertedIndex {
     println!("index construction took: {:?}",
              Instant::now().duration_since(start));
 
+
     index
 }
 
-pub fn query_index(index: &InvertedIndex, movies: &Vec<Movie>, query: String) {
+pub fn query_index(index: &InvertedIndex, movies: &Vec<Movie>, query: &String) -> Duration {
     let start = Instant::now();
     let query = query.to_lowercase();
     let mut sets = Vec::new();
@@ -83,7 +94,7 @@ pub fn query_index(index: &InvertedIndex, movies: &Vec<Movie>, query: String) {
 
     if sets.is_empty() {
         println!("no results");
-        return;
+        return Instant::now().duration_since(start);
     }
     let mut result = sets[0].clone();
     if sets.len() > 1 {
@@ -101,8 +112,32 @@ pub fn query_index(index: &InvertedIndex, movies: &Vec<Movie>, query: String) {
     println!("{} results", count);
 
     println!("");
-    println!("query time {:?}", finish.duration_since(start));
+    finish.duration_since(start)
 
+}
+
+pub fn naive_query(movies: &Vec<Movie>, query: &String) -> Duration {
+    let start = Instant::now();
+    let mut result = BTreeSet::new();
+    let mut query = stem(query.to_lowercase().trim());
+    query.insert(0, ' ');
+    query.push(' ');
+
+    for (i, movie) in movies.iter().enumerate() {
+        if movie.desc.contains(query.as_str()) {
+            result.insert(i);
+        }
+    }
+    let finish = Instant::now();
+
+    let count = result.len();
+    for i in result {
+        println!("{}: {}", i, movies[i].title)
+    }
+    println!("{} results", count);
+
+    println!("");
+    finish.duration_since(start)
 }
 
 #[derive(Debug,PartialEq)]
@@ -125,7 +160,7 @@ mod test {
     fn movie_from_str() {
         assert_eq!(Ok(super::Movie {
                           title: "test title".to_owned(),
-                          desc: "Some movie title".to_owned(),
+                          desc: "some movi titl ".to_owned(),
                       }),
                    ::std::str::FromStr::from_str("test title\tSome movie title"));
 
