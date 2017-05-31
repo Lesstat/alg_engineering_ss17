@@ -107,9 +107,7 @@ enum OffsetMode {
     Out,
 }
 impl ChGraph {
-    pub fn new(mut node_info: Vec<ChNodeInfo>, mut edges: Vec<ChEdgeInfo>) -> ChGraph {
-        //node_info.sort_by(|a, b| a.level.cmp(&b.level));
-        //ChGraph::map_node_id_to_edges(&node_info, &mut edges);
+    pub fn new(node_info: Vec<ChNodeInfo>, edges: Vec<ChEdgeInfo>) -> ChGraph {
         let level = node_info.iter().map(|n| n.level).collect();
 
 
@@ -121,19 +119,6 @@ impl ChGraph {
             out_edges: out_edges,
             in_edges: in_edges,
             level: level,
-        }
-
-    }
-    fn map_node_id_to_edges(node_info: &Vec<ChNodeInfo>, edges: &mut Vec<ChEdgeInfo>) {
-        use std::collections::BTreeMap;
-
-        let mut mapping = BTreeMap::new();
-        for (i, n) in node_info.iter().enumerate() {
-            mapping.insert(n.id, i);
-        }
-        for e in edges.iter_mut() {
-            e.source = *mapping.get(&e.source).expect("id must be present");
-            e.dest = *mapping.get(&e.dest).expect("id must be present");
         }
 
     }

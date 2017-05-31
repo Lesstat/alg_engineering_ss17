@@ -11,9 +11,11 @@ use std::time::Instant;
 
 mod ae1;
 mod ae2;
+mod ae4;
 
 use ae1::NodeId;
 
+#[allow(dead_code)]
 fn ae1_main() {
     let graph = ae1::load_graph("/home/flo/workspaces/rust/graphdata/bw.graph");
     println!("Size of graph: {} MB",
@@ -43,6 +45,7 @@ fn ae1_main() {
 
 
 }
+#[allow(dead_code)]
 fn ae2_main() {
 
     let graph = ae2::load_graph("/home/flo/workspaces/rust/graphdata/bw.ch");
@@ -70,11 +73,7 @@ fn ae2_main() {
              end.duration_since(start).as_secs() as f64 / tries as f64);
 }
 
-fn main() {
-
-    ae1_main();
-}
-
+#[allow(dead_code)]
 fn ae1_eq_ae2() {
     use std::usize;
 
@@ -103,4 +102,16 @@ fn ae1_eq_ae2() {
 
         assert_eq!(d1, d2, "form {} to {}", sources[try], destinations[try])
     }
+}
+
+fn ae4_main() {
+    use std::env;
+    let mut args = env::args();
+    let path = args.nth(1).expect("expect file argument");
+
+    let movies = ae4::load_movies(path);
+    println!("{:?}", movies)
+}
+fn main() {
+    ae4_main();
 }

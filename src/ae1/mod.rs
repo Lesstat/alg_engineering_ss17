@@ -109,6 +109,7 @@ impl Graph {
         &self.out_edges[self.node_offsets[id].out_start..self.node_offsets[id + 1].out_start]
     }
 
+    #[allow(dead_code)]
     pub fn ingoing_edges_for(&self, id: NodeId) -> &[HalfEdge] {
         &self.out_edges[self.node_offsets[id].in_start..self.node_offsets[id + 1].in_start]
     }
@@ -239,11 +240,11 @@ fn graph_creation() {
     assert_eq!(g.outgoing_edges_for(0).len(), 3);
     assert_eq!(g.outgoing_edges_for(2),
                &[HalfEdge {
-                     endpoint: 3,
-                     weight: 1,
-                 },
-                 HalfEdge {
-                     endpoint: 4,
-                     weight: 1,
-                 }]);
+                    endpoint: 3,
+                    weight: 1,
+                },
+                HalfEdge {
+                    endpoint: 4,
+                    weight: 1,
+                }]);
 }
