@@ -1,11 +1,13 @@
 use std::str::FromStr;
 use std::path::Path;
 use std::convert::From;
+use std::collections::HashMap;
+use std::collections::BTreeSet;
 
 #[derive(Debug,PartialEq,Eq)]
 pub struct Movie {
-    title: String,
-    desc: String,
+    pub title: String,
+    pub desc: String,
 }
 
 impl FromStr for Movie {
@@ -38,6 +40,17 @@ pub fn load_movies<P: AsRef<Path>>(file: P) -> Result<Vec<Movie>, StrError> {
              })
         .collect();
     Ok(movies)
+}
+
+pub fn build_inverted_index(movies: &Vec<Movie>) -> HashMap<&str, BTreeSet<usize>> {
+    let mut index = HashMap::new();
+    for (i, movie) in movies.iter().enumerate() {
+        for word in movie.desc.split(" ") {
+            index.entry(word).or_insert_with(BTreeSet::new).insert(i);
+        }
+    }
+
+    index
 }
 
 #[derive(Debug,PartialEq)]

@@ -106,11 +106,37 @@ fn ae1_eq_ae2() {
 
 fn ae4_main() {
     use std::env;
+    use std::io::{BufRead, stdin};
+
     let mut args = env::args();
     let path = args.nth(1).expect("expect file argument");
+    let movies = ae4::load_movies(path).expect("movies could not be loaded");
+    let index = ae4::build_inverted_index(&movies);
+    println!("Inverted index is build");
+    println!("Please enter Query");
+    let stdin = stdin();
+    let mut handle = stdin.lock();
 
-    let movies = ae4::load_movies(path);
-    println!("{:?}", movies)
+    loop {
+        let mut buf = String::new();
+        handle
+            .read_line(&mut buf)
+            .expect("reading from stdin failed");
+        println!("looking for key {}", buf);
+
+        let set = index.get(buf.trim());
+        match set {
+            Some(set) => {
+                for &i in set {
+                    println!("{}", movies[i].title);
+                }
+            }
+            None => println!("Word not found"),
+
+        }
+    }
+
+
 }
 fn main() {
     ae4_main();
