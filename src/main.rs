@@ -118,7 +118,6 @@ fn ae4_main() {
     let path = args.nth(1).expect("expect file argument");
     let movies = ae4::load_movies(path).expect("movies could not be loaded");
     let index = ae4::build_inverted_index(&movies);
-    let vec_index = ae4::build_vec_inverted_index(&movies);
     let naive = match args.next() {
         Some(_) => true,
         None => false,
@@ -140,7 +139,7 @@ fn ae4_main() {
         let ind_dur = ae4::query_index(&index, &movies, &buf);
 
         if naive {
-            let naiv_dur = ae4::query_vec_index(&vec_index, &movies, &buf);
+            let naiv_dur = ae4::naive_query(&movies, &buf);
             println!("vec duration: {:?}", naiv_dur);
 
         }

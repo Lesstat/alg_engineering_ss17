@@ -8,8 +8,7 @@ use std::time::{Instant, Duration};
 use porter_stemmer::stem;
 use heapsize::HeapSizeOf;
 
-type InvertedIndex<'a> = HashMap<&'a str, BTreeSet<usize>>;
-type VecInvertedIndex<'a> = HashMap<&'a str, Vec<usize>>;
+type InvertedIndex<'a> = HashMap<&'a str, Vec<usize>>;
 
 #[derive(Debug,PartialEq,Eq, HeapSizeOf)]
 pub struct Movie {
@@ -64,23 +63,8 @@ pub fn load_movies<P: AsRef<Path>>(file: P) -> Result<Vec<Movie>, StrError> {
     Ok(movies)
 }
 
+
 pub fn build_inverted_index(movies: &[Movie]) -> InvertedIndex {
-    let start = Instant::now();
-    let mut index = HashMap::new();
-    for (i, movie) in movies.iter().enumerate() {
-        for word in movie.desc.split(' ') {
-            index.entry(word).or_insert_with(BTreeSet::new).insert(i);
-        }
-    }
-
-    println!("index construction took: {:?}",
-             Instant::now().duration_since(start));
-
-
-    index
-}
-
-pub fn build_vec_inverted_index(movies: &[Movie]) -> VecInvertedIndex {
     let start = Instant::now();
     let mut index = HashMap::new();
     for (i, movie) in movies.iter().enumerate() {
@@ -98,44 +82,8 @@ pub fn build_vec_inverted_index(movies: &[Movie]) -> VecInvertedIndex {
 
     index
 }
+
 pub fn query_index(index: &InvertedIndex, movies: &[Movie], query: &str) -> Duration {
-    let start = Instant::now();
-    let query = query.to_lowercase();
-    let mut sets = Vec::new();
-    for word in query.trim().split(' ') {
-        let stemmed = stem(word);
-        let set = match index.get(stemmed.as_str()) {
-            Some(set) => set,
-            None => continue,
-        };
-        sets.push(set);
-    }
-
-    if sets.is_empty() {
-        println!("no results");
-        return Instant::now().duration_since(start);
-    }
-    let mut result = sets[0].clone();
-    if sets.len() > 1 {
-        for set in &sets[1..] {
-            let new_res = result.intersection(set).cloned().collect();
-            result = new_res;
-        }
-    }
-    let finish = Instant::now();
-
-    let count = result.len();
-    for i in result {
-        //println!("{}: {}", i, movies[i].title);
-    }
-    //println!("{} results", count);
-
-    //println!("");
-    finish.duration_since(start)
-
-}
-
-pub fn query_vec_index(index: &VecInvertedIndex, movies: &[Movie], query: &str) -> Duration {
     let start = Instant::now();
     let query = query.to_lowercase();
     let mut lists = Vec::new();
@@ -162,11 +110,11 @@ pub fn query_vec_index(index: &VecInvertedIndex, movies: &[Movie], query: &str) 
 
     let count = result.len();
     for i in result {
-        //println!("{}: {}", i, movies[i].title);
+        println!("{}: {}", i, movies[i].title);
     }
-    //println!("{} results", count);
+    println!("{} results", count);
 
-    //println!("");
+    println!("");
 
     finish.duration_since(start)
 
@@ -231,9 +179,6 @@ impl From<::std::io::Error> for StrError {
 
 #[cfg(test)]
 mod test {
-    use test::{black_box, Bencher};
-    use porter_stemmer;
-    use super::*;
 
     #[test]
     fn movie_from_str() {
@@ -251,22 +196,5 @@ mod test {
                    super::intersect(&vec![1, 2, 3, 4], &vec![2, 3, 6, 8]));
     }
 
-    #[bench]
-    fn bench_vec_index(b: &mut Bencher) {
-        let movies = load_movies("/home/flo/ownCloud/Flo/Uni Stuttgart/AE/Bläter/movies.txt")
-            .unwrap();
-        let index = build_vec_inverted_index(&movies);
-        let query = black_box(porter_stemmer::stem("salvo"));
-        b.iter(|| query_vec_index(&index, &movies, query.as_str()))
-    }
-
-    #[bench]
-    fn bench_btree_index(b: &mut Bencher) {
-        let movies = load_movies("/home/flo/ownCloud/Flo/Uni Stuttgart/AE/Bläter/movies.txt")
-            .unwrap();
-        let index = build_inverted_index(&movies);
-        let query = black_box(porter_stemmer::stem("salvo"));
-        b.iter(|| query_index(&index, &movies, query.as_str()))
-    }
 
 }
