@@ -9,6 +9,7 @@ use porter_stemmer::stem;
 use heapsize::HeapSizeOf;
 
 type InvertedIndex<'a> = HashMap<&'a str, BTreeSet<usize>>;
+type VecInvertedIndex<'a> = HashMap<&'a str, Vec<usize>>;
 
 #[derive(Debug,PartialEq,Eq, HeapSizeOf)]
 pub struct Movie {
@@ -79,6 +80,24 @@ pub fn build_inverted_index(movies: &[Movie]) -> InvertedIndex {
     index
 }
 
+pub fn build_vec_inverted_index(movies: &[Movie]) -> VecInvertedIndex {
+    let start = Instant::now();
+    let mut index = HashMap::new();
+    for (i, movie) in movies.iter().enumerate() {
+        for word in movie.desc.split(' ') {
+            let mut e = index.entry(word).or_insert_with(Vec::new);
+            if e.len() == 0 || e[e.len() - 1] != i {
+                e.push(i);
+            }
+        }
+    }
+
+    println!("index construction took: {:?}",
+             Instant::now().duration_since(start));
+
+
+    index
+}
 pub fn query_index(index: &InvertedIndex, movies: &[Movie], query: &str) -> Duration {
     let start = Instant::now();
     let query = query.to_lowercase();
@@ -107,13 +126,70 @@ pub fn query_index(index: &InvertedIndex, movies: &[Movie], query: &str) -> Dura
 
     let count = result.len();
     for i in result {
-        println!("{}: {}", i, movies[i].title);
+        //println!("{}: {}", i, movies[i].title);
     }
-    println!("{} results", count);
+    //println!("{} results", count);
 
-    println!("");
+    //println!("");
     finish.duration_since(start)
 
+}
+
+pub fn query_vec_index(index: &VecInvertedIndex, movies: &[Movie], query: &str) -> Duration {
+    let start = Instant::now();
+    let query = query.to_lowercase();
+    let mut lists = Vec::new();
+    for word in query.trim().split(' ') {
+        let stemmed = stem(word);
+        let list = match index.get(stemmed.as_str()) {
+            Some(list) => list,
+            None => continue,
+        };
+        lists.push(list);
+    }
+
+    if lists.is_empty() {
+        //println!("no results");
+        return Instant::now().duration_since(start);
+    }
+    let mut result = lists[0].clone();
+    if lists.len() > 1 {
+        for list in &lists[1..] {
+            result = intersect(&list, &result);
+        }
+    }
+    let finish = Instant::now();
+
+    let count = result.len();
+    for i in result {
+        //println!("{}: {}", i, movies[i].title);
+    }
+    //println!("{} results", count);
+
+    //println!("");
+
+    finish.duration_since(start)
+
+}
+
+pub fn intersect(list_a: &[usize], list_b: &[usize]) -> Vec<usize> {
+    let mut result = Vec::new();
+    let mut iter_a = list_a.iter();
+    let mut iter_b = list_b.iter();
+    let mut val_a = iter_a.next();
+    let mut val_b = iter_b.next();
+    while val_a != None && val_b != None {
+        if val_a > val_b {
+            val_b = iter_b.next();
+        } else if val_a < val_b {
+            val_a = iter_a.next();
+        } else {
+            result.push(*val_a.unwrap());
+            val_a = iter_a.next();
+            val_b = iter_b.next();
+        }
+    }
+    result
 }
 
 pub fn naive_query(movies: &[Movie], query: &str) -> Duration {
@@ -155,6 +231,9 @@ impl From<::std::io::Error> for StrError {
 
 #[cfg(test)]
 mod test {
+    use test::{black_box, Bencher};
+    use porter_stemmer;
+    use super::*;
 
     #[test]
     fn movie_from_str() {
@@ -164,6 +243,30 @@ mod test {
                       }),
                    ::std::str::FromStr::from_str("test title\tSome movie title"));
 
+    }
+
+    #[test]
+    fn intersect_test() {
+        assert_eq!(vec![2, 3],
+                   super::intersect(&vec![1, 2, 3, 4], &vec![2, 3, 6, 8]));
+    }
+
+    #[bench]
+    fn bench_vec_index(b: &mut Bencher) {
+        let movies = load_movies("/home/flo/ownCloud/Flo/Uni Stuttgart/AE/Bläter/movies.txt")
+            .unwrap();
+        let index = build_vec_inverted_index(&movies);
+        let query = black_box(porter_stemmer::stem("salvo"));
+        b.iter(|| query_vec_index(&index, &movies, query.as_str()))
+    }
+
+    #[bench]
+    fn bench_btree_index(b: &mut Bencher) {
+        let movies = load_movies("/home/flo/ownCloud/Flo/Uni Stuttgart/AE/Bläter/movies.txt")
+            .unwrap();
+        let index = build_inverted_index(&movies);
+        let query = black_box(porter_stemmer::stem("salvo"));
+        b.iter(|| query_index(&index, &movies, query.as_str()))
     }
 
 }
