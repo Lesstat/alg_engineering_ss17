@@ -10,8 +10,9 @@ fn load_file<P: AsRef<Path>>(file: P) -> (Vec<ChNodeInfo>, Vec<ChEdgeInfo>) {
     let mut buffer = String::new();
 
     let mut file = File::open(file).expect("File could not be opened");
-    file.read_to_string(&mut buffer)
-        .expect("Could not read file");
+    file.read_to_string(&mut buffer).expect(
+        "Could not read file",
+    );
     let lines: Vec<&str> = buffer
         .lines()
         .skip_while(|l| l.starts_with('#') || l.is_empty())
@@ -106,10 +107,14 @@ pub fn load_graph<P: AsRef<Path>>(file: P) -> ChGraph {
     let file_loaded = Instant::now();
     let g = ChGraph::new(nodes, edges);
     let graph_created = Instant::now();
-    println!("file loading time:   {:?}",
-             file_loaded.duration_since(start));
-    println!("graph creation time: {:?}",
-             graph_created.duration_since(file_loaded));
+    println!(
+        "file loading time:   {:?}",
+        file_loaded.duration_since(start)
+    );
+    println!(
+        "graph creation time: {:?}",
+        graph_created.duration_since(file_loaded)
+    );
     g
 
 }

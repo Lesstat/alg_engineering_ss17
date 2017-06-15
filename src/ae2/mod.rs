@@ -24,13 +24,14 @@ pub struct ChNodeInfo {
 }
 
 impl ChNodeInfo {
-    fn new(id: NodeId,
-           osm_id: OsmNodeId,
-           lat: Latitude,
-           long: Longitude,
-           height: Height,
-           level: Level)
-           -> ChNodeInfo {
+    fn new(
+        id: NodeId,
+        osm_id: OsmNodeId,
+        lat: Latitude,
+        long: Longitude,
+        height: Height,
+        level: Level,
+    ) -> ChNodeInfo {
         ChNodeInfo {
             id,
             osm_id,
@@ -42,7 +43,7 @@ impl ChNodeInfo {
     }
 }
 
-#[derive(PartialEq,Debug,HeapSizeOf)]
+#[derive(PartialEq, Debug, HeapSizeOf)]
 pub struct ChEdgeInfo {
     source: NodeId,
     dest: NodeId,
@@ -53,13 +54,14 @@ pub struct ChEdgeInfo {
 }
 
 impl ChEdgeInfo {
-    fn new(source: NodeId,
-           dest: NodeId,
-           length: Length,
-           speed: Speed,
-           edge_a: Option<EdgeId>,
-           edge_b: Option<EdgeId>)
-           -> ChEdgeInfo {
+    fn new(
+        source: NodeId,
+        dest: NodeId,
+        length: Length,
+        speed: Speed,
+        edge_a: Option<EdgeId>,
+        edge_b: Option<EdgeId>,
+    ) -> ChEdgeInfo {
         ChEdgeInfo {
             source: source,
             dest: dest,
@@ -71,7 +73,7 @@ impl ChEdgeInfo {
     }
 }
 
-#[derive(HeapSizeOf,Debug, Eq, PartialEq)]
+#[derive(HeapSizeOf, Debug, Eq, PartialEq)]
 pub struct HalfEdge {
     endpoint: NodeId,
     weight: Length,
@@ -79,7 +81,7 @@ pub struct HalfEdge {
 
 
 
-#[derive(Clone,PartialEq,Debug,HeapSizeOf)]
+#[derive(Clone, PartialEq, Debug, HeapSizeOf)]
 struct NodeOffset {
     in_start: usize,
     out_start: usize,
@@ -131,14 +133,17 @@ impl ChGraph {
         &self.in_edges[self.node_offsets[id].in_start..self.node_offsets[id + 1].in_start]
     }
 
-    fn calc_node_offsets(node_count: usize,
-                         mut edges: Vec<ChEdgeInfo>)
-                         -> (Vec<NodeOffset>, Vec<HalfEdge>, Vec<HalfEdge>) {
+    fn calc_node_offsets(
+        node_count: usize,
+        mut edges: Vec<ChEdgeInfo>,
+    ) -> (Vec<NodeOffset>, Vec<HalfEdge>, Vec<HalfEdge>) {
         use std::cmp::Ordering;
 
-        fn calc_offset_inner(edges: &[ChEdgeInfo],
-                             node_offsets: &mut Vec<NodeOffset>,
-                             mode: &OffsetMode) {
+        fn calc_offset_inner(
+            edges: &[ChEdgeInfo],
+            node_offsets: &mut Vec<NodeOffset>,
+            mode: &OffsetMode,
+        ) {
 
             let mut last_id = 0;
             for (index, edge) in edges.iter().enumerate() {
@@ -173,26 +178,26 @@ impl ChGraph {
             }
         }
 
-        let mut node_offsets = vec![NodeOffset::new(0,0); node_count +1];
+        let mut node_offsets = vec![NodeOffset::new(0, 0); node_count + 1];
 
         edges.sort_by(|a, b| {
-                          let ord = a.dest.cmp(&b.dest);
-                          match ord {
-                              Ordering::Equal => a.source.cmp(&b.source),
-                              _ => ord,
-                          }
-                      });
+            let ord = a.dest.cmp(&b.dest);
+            match ord {
+                Ordering::Equal => a.source.cmp(&b.source),
+                _ => ord,
+            }
+        });
         calc_offset_inner(&edges, &mut node_offsets, &OffsetMode::In);
         let in_edges = ChGraph::create_half_edges(&edges, OffsetMode::In);
 
 
         edges.sort_by(|a, b| {
-                          let ord = a.source.cmp(&b.source);
-                          match ord {
-                              Ordering::Equal => a.dest.cmp(&b.dest),
-                              _ => ord,
-                          }
-                      });
+            let ord = a.source.cmp(&b.source);
+            match ord {
+                Ordering::Equal => a.dest.cmp(&b.dest),
+                _ => ord,
+            }
+        });
         calc_offset_inner(&edges, &mut node_offsets, &OffsetMode::Out);
         let out_edges = ChGraph::create_half_edges(&edges, OffsetMode::Out);
 
@@ -205,11 +210,11 @@ impl ChGraph {
                 edges
                     .iter()
                     .map(|e| {
-                             HalfEdge {
-                                 endpoint: e.source,
-                                 weight: e.length,
-                             }
-                         })
+                        HalfEdge {
+                            endpoint: e.source,
+                            weight: e.length,
+                        }
+                    })
                     .collect()
             }
 
@@ -217,11 +222,11 @@ impl ChGraph {
                 edges
                     .iter()
                     .map(|e| {
-                             HalfEdge {
-                                 endpoint: e.dest,
-                                 weight: e.length,
-                             }
-                         })
+                        HalfEdge {
+                            endpoint: e.dest,
+                            weight: e.length,
+                        }
+                    })
                     .collect()
             }
         }

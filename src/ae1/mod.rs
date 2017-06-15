@@ -30,7 +30,7 @@ impl NodeInfo {
     }
 }
 
-#[derive(PartialEq,Debug,HeapSizeOf)]
+#[derive(PartialEq, Debug, HeapSizeOf)]
 pub struct EdgeInfo {
     source: NodeId,
     dest: NodeId,
@@ -49,7 +49,7 @@ impl EdgeInfo {
     }
 }
 
-#[derive(HeapSizeOf,Debug, Eq, PartialEq)]
+#[derive(HeapSizeOf, Debug, Eq, PartialEq)]
 pub struct HalfEdge {
     endpoint: NodeId,
     weight: Length,
@@ -57,7 +57,7 @@ pub struct HalfEdge {
 
 
 
-#[derive(Clone,PartialEq,Debug,HeapSizeOf)]
+#[derive(Clone, PartialEq, Debug, HeapSizeOf)]
 struct NodeOffset {
     in_start: usize,
     out_start: usize,
@@ -87,12 +87,12 @@ impl Graph {
     pub fn new(node_info: Vec<NodeInfo>, mut edges: Vec<EdgeInfo>) -> Graph {
         use std::cmp::Ordering;
         edges.sort_by(|a, b| {
-                          let ord = a.source.cmp(&b.source);
-                          match ord {
-                              Ordering::Equal => a.dest.cmp(&b.dest),
-                              _ => ord,
-                          }
-                      });
+            let ord = a.source.cmp(&b.source);
+            match ord {
+                Ordering::Equal => a.dest.cmp(&b.dest),
+                _ => ord,
+            }
+        });
 
         let node_count = node_info.len();
         let (node_offset, in_edges, out_edges) = Graph::calc_node_offsets(node_count, edges);
@@ -114,14 +114,17 @@ impl Graph {
         &self.out_edges[self.node_offsets[id].in_start..self.node_offsets[id + 1].in_start]
     }
 
-    fn calc_node_offsets(node_count: usize,
-                         mut edges: Vec<EdgeInfo>)
-                         -> (Vec<NodeOffset>, Vec<HalfEdge>, Vec<HalfEdge>) {
+    fn calc_node_offsets(
+        node_count: usize,
+        mut edges: Vec<EdgeInfo>,
+    ) -> (Vec<NodeOffset>, Vec<HalfEdge>, Vec<HalfEdge>) {
         use std::cmp::Ordering;
 
-        fn calc_offset_inner(edges: &[EdgeInfo],
-                             node_offsets: &mut [NodeOffset],
-                             mode: &OffsetMode) {
+        fn calc_offset_inner(
+            edges: &[EdgeInfo],
+            node_offsets: &mut [NodeOffset],
+            mode: &OffsetMode,
+        ) {
 
             let mut last_id = 0;
             for (index, edge) in edges.iter().enumerate() {
@@ -156,25 +159,25 @@ impl Graph {
             }
         }
 
-        let mut node_offsets = vec![NodeOffset::new(0,0); node_count +1];
+        let mut node_offsets = vec![NodeOffset::new(0, 0); node_count + 1];
 
         edges.sort_by(|a, b| {
-                          let ord = a.source.cmp(&b.source);
-                          match ord {
-                              Ordering::Equal => a.dest.cmp(&b.dest),
-                              _ => ord,
-                          }
-                      });
+            let ord = a.source.cmp(&b.source);
+            match ord {
+                Ordering::Equal => a.dest.cmp(&b.dest),
+                _ => ord,
+            }
+        });
         calc_offset_inner(&edges, &mut node_offsets, &OffsetMode::Out);
         let out_edges = Graph::create_half_edges(&edges, OffsetMode::Out);
 
         edges.sort_by(|a, b| {
-                          let ord = a.dest.cmp(&b.dest);
-                          match ord {
-                              Ordering::Equal => a.source.cmp(&b.source),
-                              _ => ord,
-                          }
-                      });
+            let ord = a.dest.cmp(&b.dest);
+            match ord {
+                Ordering::Equal => a.source.cmp(&b.source),
+                _ => ord,
+            }
+        });
         calc_offset_inner(&edges, &mut node_offsets, &OffsetMode::In);
         let in_edges = Graph::create_half_edges(&edges, OffsetMode::In);
 
@@ -188,11 +191,11 @@ impl Graph {
                 edges
                     .iter()
                     .map(|e| {
-                             HalfEdge {
-                                 endpoint: e.source,
-                                 weight: e.length,
-                             }
-                         })
+                        HalfEdge {
+                            endpoint: e.source,
+                            weight: e.length,
+                        }
+                    })
                     .collect()
             }
 
@@ -200,11 +203,11 @@ impl Graph {
                 edges
                     .iter()
                     .map(|e| {
-                             HalfEdge {
-                                 endpoint: e.dest,
-                                 weight: e.length,
-                             }
-                         })
+                        HalfEdge {
+                            endpoint: e.dest,
+                            weight: e.length,
+                        }
+                    })
                     .collect()
             }
         }
@@ -218,33 +221,45 @@ impl Graph {
 
 #[test]
 fn graph_creation() {
-    let g = Graph::new(vec![NodeInfo::new(23, 3.4, 2.3, 12),
-                            NodeInfo::new(27, 4.4, 2.3, 12),
-                            NodeInfo::new(53, 6.4, 1.3, 12),
-                            NodeInfo::new(36, 3.8, 2.4, 12),
-                            NodeInfo::new(78, 9.2, 2.3, 12)],
-                       vec![EdgeInfo::new(0, 1, 1, 1),
-                            EdgeInfo::new(0, 2, 1, 1),
-                            EdgeInfo::new(2, 3, 1, 1),
-                            EdgeInfo::new(0, 3, 1, 1),
-                            EdgeInfo::new(2, 4, 1, 1)]);
-    let exp = vec![NodeOffset::new(0, 0),
-                   NodeOffset::new(0, 3),
-                   NodeOffset::new(1, 3),
-                   NodeOffset::new(2, 5),
-                   NodeOffset::new(4, 5),
-                   NodeOffset::new(5, 5)];
+    let g = Graph::new(
+        vec![
+            NodeInfo::new(23, 3.4, 2.3, 12),
+            NodeInfo::new(27, 4.4, 2.3, 12),
+            NodeInfo::new(53, 6.4, 1.3, 12),
+            NodeInfo::new(36, 3.8, 2.4, 12),
+            NodeInfo::new(78, 9.2, 2.3, 12),
+        ],
+        vec![
+            EdgeInfo::new(0, 1, 1, 1),
+            EdgeInfo::new(0, 2, 1, 1),
+            EdgeInfo::new(2, 3, 1, 1),
+            EdgeInfo::new(0, 3, 1, 1),
+            EdgeInfo::new(2, 4, 1, 1),
+        ],
+    );
+    let exp = vec![
+        NodeOffset::new(0, 0),
+        NodeOffset::new(0, 3),
+        NodeOffset::new(1, 3),
+        NodeOffset::new(2, 5),
+        NodeOffset::new(4, 5),
+        NodeOffset::new(5, 5),
+    ];
     assert_eq!(g.node_offsets.len(), exp.len());
     assert_eq!(g.node_offsets, exp);
 
     assert_eq!(g.outgoing_edges_for(0).len(), 3);
-    assert_eq!(g.outgoing_edges_for(2),
-               &[HalfEdge {
-                    endpoint: 3,
-                    weight: 1,
-                },
-                HalfEdge {
-                    endpoint: 4,
-                    weight: 1,
-                }]);
+    assert_eq!(
+        g.outgoing_edges_for(2),
+        &[
+            HalfEdge {
+                endpoint: 3,
+                weight: 1,
+            },
+            HalfEdge {
+                endpoint: 4,
+                weight: 1,
+            },
+        ]
+    );
 }

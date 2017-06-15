@@ -10,7 +10,7 @@ use heapsize::HeapSizeOf;
 
 type InvertedIndex<'a> = HashMap<&'a str, Vec<usize>>;
 
-#[derive(Debug,PartialEq,Eq, HeapSizeOf)]
+#[derive(Debug, PartialEq, Eq, HeapSizeOf)]
 pub struct Movie {
     pub title: String,
     pub desc: String,
@@ -32,9 +32,9 @@ impl FromStr for Movie {
         }
 
         Ok(Movie {
-               title: title.to_owned(),
-               desc: desc.to_owned(),
-           })
+            title: title.to_owned(),
+            desc: desc.to_owned(),
+        })
 
     }
 }
@@ -49,14 +49,18 @@ pub fn load_movies<P: AsRef<Path>>(file: P) -> Result<Vec<Movie>, StrError> {
 
     let movies: Vec<Movie> = buf.lines()
         .map(|line| {
-                 let res = FromStr::from_str(line);
-                 res.expect("Line is not valid")
-             })
+            let res = FromStr::from_str(line);
+            res.expect("Line is not valid")
+        })
         .collect();
-    println!("loading file time: {:?}",
-             Instant::now().duration_since(start));
-    println!("Movies take {} MB",
-             movies.heap_size_of_children() / 1048576);
+    println!(
+        "loading file time: {:?}",
+        Instant::now().duration_since(start)
+    );
+    println!(
+        "Movies take {} MB",
+        movies.heap_size_of_children() / 1048576
+    );
 
 
 
@@ -76,8 +80,10 @@ pub fn build_inverted_index(movies: &[Movie]) -> InvertedIndex {
         }
     }
 
-    println!("index construction took: {:?}",
-             Instant::now().duration_since(start));
+    println!(
+        "index construction took: {:?}",
+        Instant::now().duration_since(start)
+    );
 
 
     index
@@ -164,7 +170,7 @@ pub fn naive_query(movies: &[Movie], query: &str) -> Duration {
     finish.duration_since(start)
 }
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct StrError {
     msg: &'static str,
 }
@@ -182,18 +188,22 @@ mod test {
 
     #[test]
     fn movie_from_str() {
-        assert_eq!(Ok(super::Movie {
-                          title: "test title".to_owned(),
-                          desc: "some movi titl ".to_owned(),
-                      }),
-                   ::std::str::FromStr::from_str("test title\tSome movie title"));
+        assert_eq!(
+            Ok(super::Movie {
+                title: "test title".to_owned(),
+                desc: "some movi titl ".to_owned(),
+            }),
+            ::std::str::FromStr::from_str("test title\tSome movie title")
+        );
 
     }
 
     #[test]
     fn intersect_test() {
-        assert_eq!(vec![2, 3],
-                   super::intersect(&vec![1, 2, 3, 4], &vec![2, 3, 6, 8]));
+        assert_eq!(
+            vec![2, 3],
+            super::intersect(&vec![1, 2, 3, 4], &vec![2, 3, 6, 8])
+        );
     }
 
 

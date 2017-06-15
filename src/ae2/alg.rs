@@ -24,7 +24,7 @@ pub struct ChDijkstra<'a> {
     graph: &'a ChGraph,
 }
 
-#[derive(PartialEq, Eq, Debug )]
+#[derive(PartialEq, Eq, Debug)]
 struct NodeCost {
     node: NodeId,
     cost: usize,

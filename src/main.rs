@@ -24,8 +24,10 @@ use ae1::NodeId;
 #[allow(dead_code)]
 fn ae1_main() {
     let graph = ae1::load_graph("/home/flo/workspaces/rust/graphdata/bw.graph");
-    println!("Size of graph: {} MB",
-             graph.heap_size_of_children() / 1048576);
+    println!(
+        "Size of graph: {} MB",
+        graph.heap_size_of_children() / 1048576
+    );
 
     println!("#Connected components: {}", graph.count_components());
     let tries = 100;
@@ -45,8 +47,10 @@ fn ae1_main() {
     }
     let end = Instant::now();
     println!("{} dijkstras took {:?}", tries, end.duration_since(start));
-    println!("average run: {} seconds",
-             end.duration_since(start).as_secs() as f64 / tries as f64);
+    println!(
+        "average run: {} seconds",
+        end.duration_since(start).as_secs() as f64 / tries as f64
+    );
 
 
 
@@ -55,8 +59,10 @@ fn ae1_main() {
 fn ae2_main() {
 
     let graph = ae2::load_graph("/home/flo/workspaces/rust/graphdata/bw.ch");
-    println!("Size of graph: {} MB",
-             graph.heap_size_of_children() / 1048576);
+    println!(
+        "Size of graph: {} MB",
+        graph.heap_size_of_children() / 1048576
+    );
 
     let tries = 1000;
     let mut sources = Vec::<NodeId>::with_capacity(tries);
@@ -75,8 +81,10 @@ fn ae2_main() {
     }
     let end = Instant::now();
     println!("{} dijkstras took {:?}", tries, end.duration_since(start));
-    println!("average run: {} seconds",
-             end.duration_since(start).as_secs() as f64 / tries as f64);
+    println!(
+        "average run: {} seconds",
+        end.duration_since(start).as_secs() as f64 / tries as f64
+    );
 }
 
 #[allow(dead_code)]
@@ -102,9 +110,10 @@ fn ae1_eq_ae2() {
         println!("try {}", try);
 
         let d2 = dijk2.distance(sources[try], destinations[try]);
-        let (d1, _) = dijk1
-            .distance(sources[try], destinations[try])
-            .unwrap_or((usize::MAX, Default::default()));
+        let (d1, _) = dijk1.distance(sources[try], destinations[try]).unwrap_or((
+            usize::MAX,
+            Default::default(),
+        ));
 
         assert_eq!(d1, d2, "form {} to {}", sources[try], destinations[try])
     }
@@ -132,9 +141,9 @@ fn ae4_main() {
 
     loop {
         let mut buf = String::new();
-        handle
-            .read_line(&mut buf)
-            .expect("reading from stdin failed");
+        handle.read_line(&mut buf).expect(
+            "reading from stdin failed",
+        );
         println!("looking for key {}", buf);
         let ind_dur = ae4::query_index(&index, &movies, &buf);
 
