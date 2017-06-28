@@ -9,6 +9,7 @@ heapsize_derive = "*"
 heapsize = "*"
 rand = "*"
 porter-stemmer = "*"
+ndarray = "*"
 
 [profile.release]
 debug = true

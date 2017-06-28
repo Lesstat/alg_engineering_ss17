@@ -7,8 +7,8 @@ extern crate rayon;
 extern crate heapsize_derive;
 extern crate heapsize;
 extern crate rand;
-
 extern crate porter_stemmer;
+extern crate ndarray;
 
 use rand::Rng;
 use heapsize::HeapSizeOf;
@@ -18,6 +18,7 @@ use std::time::Instant;
 mod ae1;
 mod ae2;
 mod ae4;
+mod ae5;
 
 use ae1::NodeId;
 
@@ -119,6 +120,7 @@ fn ae1_eq_ae2() {
     }
 }
 
+#[allow(dead_code)]
 fn ae4_main() {
     use std::env;
     use std::io::{BufRead, stdin};
@@ -160,6 +162,15 @@ fn ae4_main() {
 
 
 }
+
+fn ae5_main() {
+    let polyline = ae5::read_file(
+        "/home/flo/ownCloud/Flo/Uni Stuttgart/AE/Bläter/map_matching/file-000047.dat",
+    );
+    println!("{:?}", polyline);
+    println!("{}", polyline.len());
+}
+
 fn main() {
-    ae4_main();
+    ae5_main();
 }
